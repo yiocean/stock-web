@@ -80,32 +80,35 @@ def scrape_00981a_data():
     # --- 4. Format and Save (Layout Modification) ---
     if portfolio_list:
         try:
+            # 1. Set base path
             current_dir = os.path.dirname(os.path.abspath(__file__))
+            
+            # 2. Set target folder name (e.g., "data")
+            target_folder = "data"
+            output_dir = os.path.join(current_dir, target_folder)
+            
+            # ★★★ Key Step: Automatically create folder if it doesn't exist ★★★
+            # This prevents errors during the first run on GitHub Actions
+            os.makedirs(output_dir, exist_ok=True)
+
+            # 3. Construct full file path
             file_name = f"00981A_Holdings_{data_date.replace('-', '')}.xlsx"
-            output_file = os.path.join(current_dir, file_name)
+            output_file = os.path.join(output_dir, file_name)
 
             df_stocks = pd.DataFrame(portfolio_list)
             
-            # ★★★ Modify Here: Create Header DataFrame ★★★
-            # Format: [A1, B1, C1, D1]
+            # Define Header Row
             header_row = ['Data Date', data_date, 'Net Asset', net_asset]
             header_df = pd.DataFrame([header_row])
 
             with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
-                # 1. Write basic info (Write to Excel Row 1)
-                # index=False, header=False means write raw data without Pandas index
                 header_df.to_excel(writer, index=False, header=False, startrow=0)
-
-                # 2. Write stock list (Start writing from Excel Row 3, leaving Row 2 empty)
-                # startrow=2 means starting from the 3rd row (since Python is 0-indexed)
                 df_stocks.to_excel(writer, index=False, startrow=2)
 
-            print(f"💾 File saved as: {output_file}")
+            print(f"File saved to folder: {output_file}")
             
         except Exception as e:
-            print(f"⚠️ Error saving file: {e}")
-    else:
-        print("⚠️ No data to save")
+            print(f"Error saving file: {e}")
 
 if __name__ == "__main__":
     scrape_00981a_data()

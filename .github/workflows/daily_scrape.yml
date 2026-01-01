@@ -44,7 +44,7 @@ jobs:
           git config --local user.name "GitHub Action"
           
           # Add all generated xlsx files
-          git add *.xlsx
+          git add data/
           
           # Check for new files; only commit if changes exist
           git commit -m "Auto: Update ETF Data" || exit 0
