@@ -36,18 +36,20 @@ jobs:
       - name: Run Scraper
         run: uv run main.py
 
-      # 6. Commit and push the generated Excel file back to GitHub
-      - name: Commit and Push changes
+      - name: Check for changes
+        id: check_changes
         run: |
-          # Configure bot identity
+          if [ -n "$(git status --porcelain data/)" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and Push changes
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          
-          # Add all generated xlsx files
           git add data/
-          
-          # Check for new files; only commit if changes exist
-          git commit -m "Auto: Update ETF Data" || exit 0
-          
-          # Push back to repository
+          git commit -m "Auto: Update ETF Data"
           git push
