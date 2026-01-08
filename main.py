@@ -13,9 +13,29 @@ from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 from datetime import date
+import sys
 
 # Disable SSL warnings
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+def is_taiwan_trading_day():
+    today = datetime.now()
+
+    if today.weekday() >= 5:
+        return False
+    
+    try:
+        date_str = today.strftime('%Y%m%d')
+        url = f"https://www.twse.com.tw/exchangeReport/MI_INDEX?response=json&date={date_str}&type=ALL"
+        response = requests.get(url, timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            return 'stat' in data and data['stat'] == 'OK'
+    except:
+        pass
+    
+    return False
 
 def get_previous_data(current_dir, target_folder, etf_code):
     """
@@ -824,6 +844,11 @@ def process_etf_data(etf_data, output_dir):
         print(f"[ERROR] Save failed: {e}")
 
 def main():
+
+    if not is_taiwan_trading_day():
+        print("今天非交易日，跳過執行")
+        sys.exit(0)
+
     """Main execution function"""
     current_dir = os.path.dirname(os.path.abspath(__file__))
     output_dir = os.path.join(current_dir, "data")
